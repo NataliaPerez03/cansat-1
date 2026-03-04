@@ -34,16 +34,16 @@ export default function NeighborhoodMap({ alerts }: NeighborhoodMapProps) {
 
     return (
         <div
-            className="rounded-xl p-4 flex flex-col gap-3"
+            className="rounded-2xl p-6 flex flex-col gap-5"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
             <div className="flex items-center justify-between">
-                <h2 className="text-[11px] text-[var(--text-3)] tracking-wide uppercase">Mapa del Vecindario</h2>
-                <span className="text-[10px] text-[var(--text-3)]">{activeAlerts.length} activas</span>
+                <h2 className="text-sm text-[var(--text-3)] tracking-wide uppercase font-semibold">Mapa del Vecindario</h2>
+                <span className="text-sm text-[var(--text-3)]">{activeAlerts.length} activas</span>
             </div>
 
-            <div className="relative rounded-lg overflow-hidden" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-                <svg viewBox="0 0 100 100" className="w-full" style={{ height: 220 }}>
+            <div className="relative rounded-xl overflow-hidden" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                <svg viewBox="0 0 100 100" className="w-full" style={{ height: 300 }}>
                     {[20, 40, 60, 80].map((v) => (
                         <g key={v}>
                             <line x1={v} y1={0} x2={v} y2={100} stroke="var(--border)" strokeWidth="0.15" />
@@ -63,13 +63,13 @@ export default function NeighborhoodMap({ alerts }: NeighborhoodMapProps) {
                                     strokeWidth={color ? 0.6 : 0.3}
                                     rx="2"
                                 />
-                                <text x={z.cx} y={z.cy - 2} textAnchor="middle" fill="var(--text-3)" fontSize="3" fontFamily="Inter">
+                                <text x={z.cx} y={z.cy - 2} textAnchor="middle" fill="var(--text-3)" fontSize="3.5" fontFamily="Inter" fontWeight="500">
                                     {z.id}
                                 </text>
                                 {count > 0 && (
                                     <>
-                                        <circle cx={z.cx} cy={z.cy + 4} r="3" fill={color || 'var(--text-3)'} opacity="0.9" />
-                                        <text x={z.cx} y={z.cy + 5.2} textAnchor="middle" fill="white" fontSize="2.8" fontWeight="600">
+                                        <circle cx={z.cx} cy={z.cy + 4} r="3.5" fill={color || 'var(--text-3)'} opacity="0.9" />
+                                        <text x={z.cx} y={z.cy + 5.5} textAnchor="middle" fill="white" fontSize="3.2" fontWeight="700">
                                             {count}
                                         </text>
                                     </>
@@ -83,16 +83,16 @@ export default function NeighborhoodMap({ alerts }: NeighborhoodMapProps) {
                 </svg>
             </div>
 
-            <div className="flex items-center gap-4 justify-center">
+            <div className="flex items-center gap-6 justify-center">
                 {[
                     { label: 'Crítico', color: 'var(--red)' },
                     { label: 'Advertencia', color: 'var(--orange)' },
                     { label: 'Info', color: 'var(--blue)' },
                     { label: 'Libre', color: 'var(--text-3)' },
                 ].map(({ label, color }) => (
-                    <div key={label} className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-sm" style={{ background: color }} />
-                        <span className="text-[9px] text-[var(--text-3)]">{label}</span>
+                    <div key={label} className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded" style={{ background: color }} />
+                        <span className="text-xs text-[var(--text-3)]">{label}</span>
                     </div>
                 ))}
             </div>

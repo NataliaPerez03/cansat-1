@@ -25,50 +25,50 @@ export default function SensorPanel({ sensors, connected, lastQueried }: SensorP
 
     return (
         <div
-            className="rounded-xl p-4 flex flex-col gap-3"
+            className="rounded-2xl p-6 flex flex-col gap-5"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
             <div className="flex items-center justify-between">
-                <h2 className="text-[11px] text-[var(--text-3)] tracking-wide uppercase">Sensores en Vivo</h2>
-                <div className="flex items-center gap-1.5">
+                <h2 className="text-sm text-[var(--text-3)] tracking-wide uppercase font-semibold">Sensores en Vivo</h2>
+                <div className="flex items-center gap-2">
                     <span
-                        className="w-1.5 h-1.5 rounded-full"
+                        className="w-2.5 h-2.5 rounded-full"
                         style={{
                             background: connected === true ? 'var(--green)' : connected === false ? 'var(--red)' : 'var(--text-3)',
                             animation: connected === true ? 'pulse-dot 2s ease-in-out infinite' : 'none',
                         }}
                     />
-                    <span className="text-[10px] text-[var(--text-3)]">
+                    <span className="text-sm text-[var(--text-3)]">
                         {connected === true ? 'Conectado' : connected === false ? 'Desconectado' : 'Consultando...'}
                     </span>
                 </div>
             </div>
 
             {!hasData ? (
-                <div className="py-6 text-center">
-                    <p className="text-xs text-[var(--text-3)]">
+                <div className="py-10 text-center">
+                    <p className="text-base text-[var(--text-3)]">
                         {connected === false ? 'No se puede conectar a InfluxDB' : 'Esperando datos de sensores...'}
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-3">
                     {SENSOR_CONFIG.map(({ field, label, unit, icon }) => {
                         const reading = sensors[field];
                         return (
                             <div
                                 key={field}
-                                className="rounded-lg px-2.5 py-2 flex flex-col gap-0.5"
+                                className="rounded-xl px-3.5 py-3 flex flex-col gap-1.5"
                                 style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
                             >
-                                <div className="flex items-center gap-1">
-                                    <span className="text-[10px]">{icon}</span>
-                                    <span className="text-[9px] text-[var(--text-3)] uppercase tracking-wider">{label}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm">{icon}</span>
+                                    <span className="text-xs text-[var(--text-3)] uppercase tracking-wider font-medium">{label}</span>
                                 </div>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="mono text-sm font-medium text-[var(--text)]">
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="mono text-xl font-bold text-[var(--text)]">
                                         {reading ? reading.value.toFixed(1) : '—'}
                                     </span>
-                                    <span className="text-[9px] text-[var(--text-3)]">{unit}</span>
+                                    <span className="text-xs text-[var(--text-3)]">{unit}</span>
                                 </div>
                             </div>
                         );
@@ -77,7 +77,7 @@ export default function SensorPanel({ sensors, connected, lastQueried }: SensorP
             )}
 
             {lastQueried && (
-                <p className="text-[9px] text-[var(--text-3)] text-right">
+                <p className="text-xs text-[var(--text-3)] text-right">
                     Última consulta: {new Date(lastQueried).toLocaleTimeString()}
                 </p>
             )}

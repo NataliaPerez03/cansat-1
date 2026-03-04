@@ -26,44 +26,44 @@ export default function AlertCard({ alert, onResolve }: AlertCardProps) {
 
     return (
         <div
-            className={`rounded-xl p-4 transition-all ${alert.isNew ? 'animate-slide-in' : ''} ${alert.severity === 'critical' && alert.isNew ? 'animate-shake' : ''}`}
+            className={`rounded-2xl p-6 transition-all ${alert.isNew ? 'animate-slide-in' : ''} ${alert.severity === 'critical' && alert.isNew ? 'animate-shake' : ''}`}
             style={{
                 background: 'var(--bg-card)',
                 border: `1px solid ${alert.severity === 'critical' ? cfg.color + '44' : 'var(--border)'}`,
             }}
         >
             {/* Top row */}
-            <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex items-center gap-4 min-w-0">
                     <span
-                        className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs"
+                        className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-lg"
                         style={{ background: cfg.dim, color: cfg.color }}
                     >
                         {cfg.icon}
                     </span>
                     <div className="min-w-0">
-                        <h3 className="text-sm font-medium text-[var(--text)] truncate">{alert.title}</h3>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: cfg.dim, color: cfg.color }}>
+                        <h3 className="text-lg font-semibold text-[var(--text)] truncate">{alert.title}</h3>
+                        <div className="flex items-center gap-3 mt-1">
+                            <span className="text-xs font-semibold px-2.5 py-1 rounded-md" style={{ background: cfg.dim, color: cfg.color }}>
                                 {cfg.label}
                             </span>
-                            <span className="text-[10px] text-[var(--text-3)]">{alert.zone}</span>
+                            <span className="text-xs text-[var(--text-3)]">{alert.zone}</span>
                         </div>
                     </div>
                 </div>
-                <span className="text-[10px] text-[var(--text-3)] flex-shrink-0 mt-0.5 mono">{timeAgo(alert.timestamp)}</span>
+                <span className="text-xs text-[var(--text-3)] flex-shrink-0 mt-1 mono">{timeAgo(alert.timestamp)}</span>
             </div>
 
             {/* Description */}
-            <p className="text-xs text-[var(--text-2)] leading-relaxed mb-3">{alert.description}</p>
+            <p className="text-base text-[var(--text-2)] leading-relaxed mb-5">{alert.description}</p>
 
             {/* Footer */}
             <div className="flex items-center justify-between">
-                <span className="text-[10px] text-[var(--text-3)]">{alert.source}</span>
+                <span className="text-sm text-[var(--text-3)]">{alert.source}</span>
                 {alert.severity !== 'resolved' && (
                     <button
                         onClick={() => onResolve(alert.id)}
-                        className="text-[10px] font-medium px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                        className="text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
                         style={{ background: 'var(--green-dim)', color: 'var(--green)' }}
                     >
                         Resolver
