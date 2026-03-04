@@ -2,7 +2,7 @@
 
 import { useAlerts } from '@/hooks/useAlerts';
 import AlertCard from '@/components/AlertCard';
-import QuickAlerts from '@/components/QuickAlerts';
+
 import SendAlert from '@/components/SendAlert';
 import NeighborhoodMap from '@/components/NeighborhoodMap';
 import SensorPanel from '@/components/SensorPanel';
@@ -110,7 +110,7 @@ export default function Dashboard() {
         >
           <SensorPanel sensors={sensors} connected={connected} lastQueried={lastQueried} />
           <SendAlert onSend={sendAlert} />
-          <QuickAlerts onSend={sendAlert} />
+
           <NeighborhoodMap alerts={alerts} />
         </div>
       </div>
