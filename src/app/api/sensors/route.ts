@@ -28,8 +28,8 @@ const THRESHOLDS: Record<string, { warning: [number, number]; critical: [number,
         label: 'Metano',
     },
     presion_atmosferica: {
-        warning: [950, 1050],
-        critical: [900, 1100],
+        warning: [0, 720],
+        critical: [0, 730],
         unit: 'hPa',
         label: 'Presión Atmosférica',
     },
@@ -186,6 +186,7 @@ export async function GET() {
         return NextResponse.json({
             sensors,
             alerts,
+            thresholds: THRESHOLDS,
             queriedAt: new Date().toISOString(),
         });
     } catch (err: unknown) {

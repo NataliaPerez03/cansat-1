@@ -1,115 +1,128 @@
 'use client';
 
 import { useAlerts } from '@/hooks/useAlerts';
-import AlertCard from '@/components/AlertCard';
-
-import SendAlert from '@/components/SendAlert';
-import NeighborhoodMap from '@/components/NeighborhoodMap';
+import StatusHeader from '@/components/StatusHeader';
 import SensorPanel from '@/components/SensorPanel';
+import SafetyTips from '@/components/SafetyTips';
+import AlertCard from '@/components/AlertCard';
+import SensorCharts from '@/components/SensorCharts';
+import RiskGauge from '@/components/RiskGauge';
+import NeighborhoodMap from '@/components/NeighborhoodMap';
+import EmergencyContacts from '@/components/EmergencyContacts';
+import { AlertTriangle } from 'lucide-react';
 
 export default function Dashboard() {
-  const { alerts, sensors, sendAlert, resolveAlert, sirenActive, stats, connected, lastQueried } = useAlerts();
+  const {
+    alerts,
+    sensors,
+    sensorHistory,
+    thresholds,
+    resolveAlert,
+    sirenActive,
+    stats,
+    connected,
+    lastQueried,
+  } = useAlerts();
+
+  const activeAlerts = alerts.filter((a) => a.severity !== 'resolved');
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {sirenActive && (
-        <div
-          className="fixed inset-0 pointer-events-none z-50"
-          style={{
-            background: 'rgba(239, 68, 68, 0.06)',
-            animation: 'pulse-dot 0.5s ease-in-out infinite',
-          }}
+    <div className="min-h-screen flex flex-col" style={{ position: 'relative' }}>
+      {/* Dashboard content */}
+      <div className="flex flex-col gap-6 p-6 lg:p-8 max-w-[1600px] w-full mx-auto">
+        {/* ── 1. Status Header ── */}
+        <StatusHeader
+          connected={connected}
+          stats={stats}
+          lastQueried={lastQueried}
+          sirenActive={sirenActive}
         />
-      )}
 
-      {/* Top bar */}
-      <header
-        className="flex items-center justify-between px-10 py-5 flex-shrink-0"
-        style={{ borderBottom: '1px solid var(--border)' }}
-      >
-        <div className="flex items-center gap-5">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
-            style={{ background: 'var(--red-dim)', color: 'var(--red)' }}
-          >
-            ⚡
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-[var(--text)]">Sistema de Alertas Vecinal</h1>
-            <p className="text-sm text-[var(--text-3)] mt-0.5">
-              InfluxDB · Sensores en tiempo real
-              {connected === true && <span style={{ color: 'var(--green)' }}> · Conectado</span>}
-              {connected === false && <span style={{ color: 'var(--red)' }}> · Sin conexión</span>}
-            </p>
-          </div>
-        </div>
+        {/* ── 2. Safety Tips — prominent at top ── */}
+        <SafetyTips alerts={alerts} sensors={sensors} thresholds={thresholds} />
 
-        <div className="flex items-center gap-3">
-          {[
-            { label: 'Crítico', value: stats.critical, color: 'var(--red)', dim: 'var(--red-dim)' },
-            { label: 'Advertencia', value: stats.warning, color: 'var(--orange)', dim: 'var(--orange-dim)' },
-            { label: 'Resuelto', value: stats.resolved, color: 'var(--green)', dim: 'var(--green-dim)' },
-            { label: 'Total', value: stats.total, color: 'var(--text-2)', dim: 'rgba(255,255,255,0.05)' },
-          ].map(({ label, value, color, dim }) => (
-            <div
-              key={label}
-              className="flex items-center gap-2.5 px-4 py-2 rounded-xl"
-              style={{ background: dim, border: `1px solid ${color}22` }}
-            >
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-              <span className="mono text-lg font-bold" style={{ color }}>{value}</span>
-              <span className="text-sm text-[var(--text-3)]">{label}</span>
-            </div>
-          ))}
-        </div>
-      </header>
+        {/* ── 3. Sensor Panel — full width ── */}
+        <SensorPanel
+          sensors={sensors}
+          connected={connected}
+          thresholds={thresholds}
+        />
 
-      {/* Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left — Alert feed */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-medium text-[var(--text-2)]">Feed de Alertas</h2>
-            <span className="flex items-center gap-2">
-              <span
-                className="w-2.5 h-2.5 rounded-full"
-                style={{
-                  background: connected === true ? 'var(--green)' : 'var(--text-3)',
-                  animation: connected === true ? 'pulse-dot 2s ease-in-out infinite' : 'none',
-                }}
-              />
-              <span className="text-sm text-[var(--text-3)]">
-                {connected === true ? 'Monitoreando' : 'Esperando conexión...'}
-              </span>
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-5">
-            {alerts.length === 0 && (
-              <div className="text-center py-24">
-                <p className="text-xl text-[var(--text-3)]">Sin alertas</p>
-                <p className="text-sm text-[var(--text-3)] mt-3">
-                  {connected === false
-                    ? 'Verificando conexión con InfluxDB...'
-                    : 'Las alertas aparecerán aquí cuando los sensores detecten anomalías'}
-                </p>
+        {/* ── 4. Main content: Alerts + Sidebar ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Alert Feed — 2 columns */}
+          <div className="lg:col-span-2 flex flex-col gap-3">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-sm font-semibold tracking-wide uppercase" style={{ color: 'var(--text-3)' }}>
+                Feed de Alertas
+              </h2>
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{
+                    background: connected === true ? 'var(--green)' : 'var(--text-3)',
+                    animation: connected === true ? 'pulse-dot 2s ease-in-out infinite' : 'none',
+                  }}
+                />
+                <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  {connected === true ? 'Monitoreando' : 'Esperando conexión...'}
+                </span>
               </div>
-            )}
-            {alerts.map((alert) => (
-              <AlertCard key={alert.id} alert={alert} onResolve={resolveAlert} />
-            ))}
+            </div>
+
+            <div
+              className="flex flex-col gap-3 overflow-y-auto pr-1"
+              style={{ maxHeight: '460px' }}
+            >
+              {alerts.length === 0 ? (
+                <div className="card p-12 text-center">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                    style={{ background: 'rgba(255,255,255,0.03)' }}
+                  >
+                    <AlertTriangle size={24} style={{ color: 'var(--text-3)' }} />
+                  </div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-3)' }}>
+                    Sin alertas activas
+                  </p>
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>
+                    {connected === false
+                      ? 'Verificando conexión con InfluxDB...'
+                      : 'Las alertas aparecerán aquí cuando los sensores detecten anomalías'}
+                  </p>
+                </div>
+              ) : (
+                alerts.map((alert) => (
+                  <AlertCard key={alert.id} alert={alert} onResolve={resolveAlert} />
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Right column: Risk Gauge + Map */}
+          <div className="flex flex-col gap-5">
+            <RiskGauge sensors={sensors} thresholds={thresholds} />
+            <NeighborhoodMap alerts={alerts} />
           </div>
         </div>
 
-        {/* Right — Sidebar */}
-        <div
-          className="w-[420px] flex-shrink-0 overflow-y-auto p-8 flex flex-col gap-6"
-          style={{ borderLeft: '1px solid var(--border)' }}
-        >
-          <SensorPanel sensors={sensors} connected={connected} lastQueried={lastQueried} />
-          <SendAlert onSend={sendAlert} />
-          <NeighborhoodMap alerts={alerts} />
-        </div>
+        {/* ── 5. Charts — full width ── */}
+        <SensorCharts history={sensorHistory} />
+
+        {/* ── 6. Emergency Contacts ── */}
+        <EmergencyContacts />
+
+        {/* Footer */}
+        <footer className="text-center py-3">
+          <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+            CanSat Control Center · Monitoreo Ambiental en Tiempo Real
+            {activeAlerts.length > 0 && (
+              <span style={{ color: 'var(--orange)' }}>
+                {' '}· {activeAlerts.length} alerta{activeAlerts.length !== 1 ? 's' : ''} activa{activeAlerts.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </p>
+        </footer>
       </div>
     </div>
   );

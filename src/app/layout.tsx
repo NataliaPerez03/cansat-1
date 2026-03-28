@@ -2,18 +2,18 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Sistema de Alertas Vecinal',
-  description: 'Sistema de alertas comunitarias en tiempo real para tu vecindario.',
+  title: 'CanSat — Centro de Control Ambiental',
+  description: 'Dashboard de monitoreo ambiental en tiempo real con sensores CanSat conectados a InfluxDB.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>

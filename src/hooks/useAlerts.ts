@@ -19,11 +19,29 @@ export interface SensorData {
     [field: string]: { value: number; time: string };
 }
 
+export interface SensorHistoryEntry {
+    time: string;
+    [field: string]: number | string;
+}
+
+export interface ThresholdConfig {
+    warning: [number, number];
+    critical: [number, number];
+    unit: string;
+    label: string;
+}
+
+export type Thresholds = Record<string, ThresholdConfig>;
+
+const MAX_HISTORY = 20;
+
 let idCounter = 0;
 
 export function useAlerts() {
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [sensors, setSensors] = useState<SensorData>({});
+    const [sensorHistory, setSensorHistory] = useState<SensorHistoryEntry[]>([]);
+    const [thresholds, setThresholds] = useState<Thresholds>({});
     const [sirenActive, setSirenActive] = useState(false);
     const [connected, setConnected] = useState<boolean | null>(null);
     const [lastQueried, setLastQueried] = useState<string | null>(null);
@@ -48,6 +66,29 @@ export function useAlerts() {
                 setSensors(data.sensors || {});
                 setLastQueried(data.queriedAt);
 
+                // Store thresholds from API
+                if (data.thresholds) {
+                    setThresholds(data.thresholds);
+                }
+
+                // Append to sensor history for charts
+                if (data.sensors && Object.keys(data.sensors).length > 0) {
+                    const entry: SensorHistoryEntry = {
+                        time: new Date(data.queriedAt).toLocaleTimeString('es-ES', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                        }),
+                    };
+                    for (const [field, reading] of Object.entries(data.sensors)) {
+                        entry[field] = (reading as { value: number }).value;
+                    }
+                    setSensorHistory((prev) => {
+                        const next = [...prev, entry];
+                        return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
+                    });
+                }
+
                 // Convert API alerts into our Alert format
                 if (data.alerts && data.alerts.length > 0) {
                     const newAlerts: Alert[] = data.alerts.map((a: { id: string; title: string; description: string; severity: Severity; zone: string; source: string; timestamp: string }) => ({
@@ -62,7 +103,6 @@ export function useAlerts() {
                     }));
 
                     setAlerts((prev) => {
-                        // Deduplicate by base ID (field + severity) — only add if not already present in last cycle
                         const existingBaseIds = new Set(prev.slice(0, 20).map((a) => a.id.replace(/-\d+$/, '')));
                         const truly = newAlerts.filter((a: Alert) => !existingBaseIds.has(a.id.replace(/-\d+$/, '')));
 
@@ -89,7 +129,7 @@ export function useAlerts() {
         }
 
         poll();
-        const interval = setInterval(poll, 5000); // Poll every 5s
+        const interval = setInterval(poll, 5000);
 
         return () => {
             active = false;
@@ -127,5 +167,5 @@ export function useAlerts() {
         resolved: alerts.filter((a) => a.severity === 'resolved').length,
     };
 
-    return { alerts, sensors, sendAlert, resolveAlert, sirenActive, stats, connected, lastQueried };
+    return { alerts, sensors, sensorHistory, thresholds, sendAlert, resolveAlert, sirenActive, stats, connected, lastQueried };
 }
