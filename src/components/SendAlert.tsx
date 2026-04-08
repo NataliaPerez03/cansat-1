@@ -26,80 +26,83 @@ export default function SendAlert({ onSend }: SendAlertProps) {
         return (
             <button
                 onClick={() => setOpen(true)}
-                className="w-full py-3.5 rounded-xl text-base font-medium transition-all cursor-pointer hover:brightness-110 active:scale-[0.98]"
-                style={{ background: 'var(--red-dim)', color: 'var(--red)', border: '1px solid var(--red)33' }}
+                className="w-full py-4 rounded-xl text-base font-bold uppercase tracking-wider transition-all cursor-pointer bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 active:scale-[0.98] shadow-sm"
             >
-                + Enviar Alerta
+                + Crear Alerta Manual
             </button>
         );
     }
 
     return (
-        <div
-            className="rounded-2xl p-6 animate-slide-in"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-        >
-            <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-medium text-[var(--text)]">Nueva Alerta</h2>
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-md animate-slide-in">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-slate-800">Nueva Alerta</h2>
                 <button
                     onClick={() => setOpen(false)}
-                    className="text-[var(--text-3)] text-base cursor-pointer hover:text-[var(--text-2)]"
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors cursor-pointer"
                 >
                     ✕
                 </button>
             </div>
 
             <div className="flex flex-col gap-4">
+                {/* Título */}
                 <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Título de la alerta..."
-                    className="w-full px-4 py-3 rounded-xl text-base text-[var(--text)] placeholder:text-[var(--text-3)] outline-none"
-                    style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+                    className="w-full px-4 py-3.5 rounded-xl text-base font-medium text-slate-800 bg-slate-50 border border-slate-200 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
+
+                {/* Descripción */}
                 <textarea
                     value={desc}
                     onChange={(e) => setDesc(e.target.value)}
-                    placeholder="Describa la situación..."
+                    placeholder="Describa la situación detalladamente..."
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl text-base text-[var(--text)] placeholder:text-[var(--text-3)] outline-none resize-none"
-                    style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+                    className="w-full px-4 py-3.5 rounded-xl text-base font-medium text-slate-800 bg-slate-50 border border-slate-200 placeholder:text-slate-400 outline-none resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
 
-                <div className="flex gap-3">
-                    {(['critical', 'warning', 'info'] as Severity[]).map((s) => {
-                        const colors: Record<string, string> = { critical: 'var(--red)', warning: 'var(--orange)', info: 'var(--blue)' };
-                        const dims: Record<string, string> = { critical: 'var(--red-dim)', warning: 'var(--orange-dim)', info: 'var(--blue-dim)' };
-                        const labels: Record<string, string> = { critical: 'crítico', warning: 'advertencia', info: 'info' };
-                        return (
-                            <button
-                                key={s}
-                                onClick={() => setSeverity(s)}
-                                className="flex-1 text-sm font-semibold py-2.5 rounded-xl transition-all cursor-pointer uppercase tracking-wider"
-                                style={{
-                                    background: severity === s ? colors[s] + '22' : 'var(--bg-raised)',
-                                    color: severity === s ? colors[s] : 'var(--text-3)',
-                                    border: `1px solid ${severity === s ? colors[s] + '44' : 'var(--border)'}`,
-                                }}
-                            >
-                                {labels[s]}
-                            </button>
-                        );
-                    })}
+                {/* Nivel de Severidad */}
+                <div>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Nivel de Severidad</span>
+                    <div className="flex gap-3">
+                        {(['critical', 'warning', 'info'] as Severity[]).map((s) => {
+                            const bgColors: Record<string, string> = { critical: 'bg-red-50', warning: 'bg-amber-50', info: 'bg-blue-50' };
+                            const textColors: Record<string, string> = { critical: 'text-red-600', warning: 'text-amber-600', info: 'text-blue-600' };
+                            const borderColors: Record<string, string> = { critical: 'border-red-200', warning: 'border-amber-200', info: 'border-blue-200' };
+                            const labels: Record<string, string> = { critical: 'Crítico', warning: 'Advertencia', info: 'Info' };
+
+                            const isSelected = severity === s;
+
+                            return (
+                                <button
+                                    key={s}
+                                    onClick={() => setSeverity(s)}
+                                    className={`flex-1 text-sm font-bold py-3 rounded-xl transition-all cursor-pointer uppercase tracking-wider border ${isSelected
+                                            ? `${bgColors[s]} ${textColors[s]} ${borderColors[s]} shadow-sm`
+                                            : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
+                                        }`}
+                                >
+                                    {labels[s]}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
+                {/* Zona */}
                 <input
                     value={zone}
                     onChange={(e) => setZone(e.target.value)}
-                    placeholder="Zona / Área"
-                    className="w-full px-4 py-3 rounded-xl text-base text-[var(--text)] placeholder:text-[var(--text-3)] outline-none"
-                    style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+                    placeholder="Zona / Área afectada"
+                    className="w-full px-4 py-3.5 rounded-xl text-base font-medium text-slate-800 bg-slate-50 border border-slate-200 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
 
+                {/* Botón de Enviar */}
                 <button
                     onClick={submit}
-                    className="w-full py-3 rounded-xl text-base font-semibold transition-all cursor-pointer active:scale-[0.98]"
-                    style={{ background: 'var(--red)', color: 'white' }}
+                    className="w-full py-4 mt-2 rounded-xl text-base font-bold uppercase tracking-wider text-white bg-red-600 border border-red-700 shadow-sm transition-all hover:bg-red-700 cursor-pointer active:scale-[0.98]"
                 >
                     Transmitir Alerta
                 </button>

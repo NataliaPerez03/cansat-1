@@ -16,7 +16,7 @@ export interface Alert {
 }
 
 export interface SensorData {
-    [field: string]: { value: number; time: string };
+    [field: string]: { value: number | string; time: string };
 }
 
 export interface SensorHistoryEntry {
@@ -45,6 +45,7 @@ export function useAlerts() {
     const [sirenActive, setSirenActive] = useState(false);
     const [connected, setConnected] = useState<boolean | null>(null);
     const [lastQueried, setLastQueried] = useState<string | null>(null);
+    const [redesWifi, setRedesWifi] = useState<string>('');
 
     // Poll the API route
     useEffect(() => {
@@ -65,6 +66,7 @@ export function useAlerts() {
                 setConnected(true);
                 setSensors(data.sensors || {});
                 setLastQueried(data.queriedAt);
+                setRedesWifi(data.redes_wifi || '');
 
                 // Store thresholds from API
                 if (data.thresholds) {
@@ -81,7 +83,7 @@ export function useAlerts() {
                         }),
                     };
                     for (const [field, reading] of Object.entries(data.sensors)) {
-                        entry[field] = (reading as { value: number }).value;
+                        entry[field] = (reading as { value: number | string }).value;
                     }
                     setSensorHistory((prev) => {
                         const next = [...prev, entry];
@@ -167,5 +169,5 @@ export function useAlerts() {
         resolved: alerts.filter((a) => a.severity === 'resolved').length,
     };
 
-    return { alerts, sensors, sensorHistory, thresholds, sendAlert, resolveAlert, sirenActive, stats, connected, lastQueried };
+    return { alerts, sensors, sensorHistory, thresholds, sendAlert, resolveAlert, sirenActive, stats, connected, lastQueried, redesWifi };
 }

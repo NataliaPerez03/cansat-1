@@ -25,21 +25,22 @@ interface QuickAlertsProps {
 
 export default function QuickAlerts({ onSend }: QuickAlertsProps) {
     return (
-        <div
-            className="rounded-xl p-4"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-        >
-            <h2 className="text-[11px] text-[var(--text-3)] tracking-wide uppercase mb-3">Alertas Rápidas</h2>
-            <div className="grid grid-cols-3 gap-2">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <h2 className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-4">
+                Alertas Rápidas
+            </h2>
+
+            <div className="grid grid-cols-3 gap-3">
                 {presets.map((p) => (
                     <button
                         key={p.label}
                         onClick={() => onSend({ title: p.title, description: p.description, severity: p.severity, zone: 'Mi Zona', source: 'Reporte Manual' })}
-                        className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.97]"
-                        style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+                        className="flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl bg-slate-50 border border-slate-200 transition-all cursor-pointer hover:bg-white hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5 active:scale-[0.97]"
                     >
-                        <span className="text-xl">{p.icon}</span>
-                        <span className="text-[10px] font-medium text-[var(--text-2)]">{p.label}</span>
+                        <span className="text-2xl drop-shadow-sm">{p.icon}</span>
+                        <span className="text-[11px] font-bold text-slate-700 tracking-wide">
+                            {p.label}
+                        </span>
                     </button>
                 ))}
             </div>

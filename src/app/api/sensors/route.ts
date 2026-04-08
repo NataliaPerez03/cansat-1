@@ -48,13 +48,14 @@ function outsideRange(value: number, range: [number, number]): boolean {
 
 interface SensorReading {
     field: string;
-    value: number;
+    value: number | string;
     time: string;
 }
 
 export async function GET() {
     try {
         // Query last 30 seconds of data
+        // Numeric sensors query
         const fluxQuery = `
       from(bucket: "${BUCKET}")
         |> range(start: -30s)
@@ -70,6 +71,15 @@ export async function GET() {
             r["_field"] == "presion_atmosferica" or
             r["_field"] == "altitud"
         )
+        |> last()
+    `;
+
+        // Separate query for string field (InfluxDB stores strings in a different schema)
+        const wifiQuery = `
+      from(bucket: "${BUCKET}")
+        |> range(start: -5m)
+        |> filter(fn: (r) => r["_measurement"] == "Sensores")
+        |> filter(fn: (r) => r["_field"] == "redes_wifi")
         |> last()
     `;
 
@@ -94,8 +104,30 @@ export async function GET() {
             });
         });
 
+        // Fetch redes_wifi string separately
+        let redes_wifi = '';
+        try {
+            await new Promise<void>((resolve, reject) => {
+                queryApi.queryRows(wifiQuery, {
+                    next(row, tableMeta) {
+                        const o = tableMeta.toObject(row);
+                        redes_wifi = String(o._value);
+                    },
+                    error(err) {
+                        console.error('WiFi query error:', err);
+                        resolve(); // Don't fail the whole request
+                    },
+                    complete() {
+                        resolve();
+                    },
+                });
+            });
+        } catch (e) {
+            console.error('WiFi query exception:', e);
+        }
+
         // Build current sensor values map
-        const sensors: Record<string, { value: number; time: string }> = {};
+        const sensors: Record<string, { value: number | string; time: string }> = {};
         for (const r of readings) {
             sensors[r.field] = { value: r.value, time: r.time };
         }
@@ -117,9 +149,9 @@ export async function GET() {
 
         for (const [field, config] of Object.entries(THRESHOLDS)) {
             const reading = sensors[field];
-            if (!reading) continue;
+            if (!reading || typeof reading.value !== 'number') continue;
 
-            const { value } = reading;
+            const value = reading.value;
 
             if (outsideRange(value, config.critical)) {
                 alerts.push({
@@ -149,9 +181,9 @@ export async function GET() {
         }
 
         // Accelerometer: check for impact / free-fall
-        const ax = sensors['x']?.value;
-        const ay = sensors['y']?.value;
-        const az = sensors['z']?.value;
+        const ax = sensors['x']?.value as number;
+        const ay = sensors['y']?.value as number;
+        const az = sensors['z']?.value as number;
 
         if (ax !== undefined && ay !== undefined && az !== undefined) {
             const totalG = Math.sqrt(ax * ax + ay * ay + az * az);
@@ -187,6 +219,7 @@ export async function GET() {
             sensors,
             alerts,
             thresholds: THRESHOLDS,
+            redes_wifi,
             queriedAt: new Date().toISOString(),
         });
     } catch (err: unknown) {

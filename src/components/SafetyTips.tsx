@@ -1,275 +1,169 @@
 'use client';
 
-import { Alert } from '@/hooks/useAlerts';
-import { SensorData, Thresholds } from '@/hooks/useAlerts';
-import { Shield, Wind, Flame, Thermometer, AlertTriangle, Heart } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Check, Flame, Heart, Shield, Wind } from 'lucide-react';
 import { useMemo } from 'react';
+import { type Alert, type SensorData, type Thresholds } from '@/hooks/useAlerts';
 
 interface SafetyTipsProps {
-    alerts: Alert[];
-    sensors: SensorData;
-    thresholds: Thresholds;
+  alerts: Alert[];
+  sensors: SensorData;
+  thresholds: Thresholds;
 }
 
 interface Tip {
-    id: string;
-    icon: React.ReactNode;
-    title: string;
-    subtitle: string;
-    color: string;
-    dim: string;
-    actions: string[];
-    priority: number;
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  color: string;
+  actions: string[];
+  priority: number;
 }
 
 function getActiveTips(alerts: Alert[], sensors: SensorData, thresholds: Thresholds): Tip[] {
-    const activeAlerts = alerts.filter((a) => a.severity === 'critical' || a.severity === 'warning');
-    const tips: Tip[] = [];
-    const seen = new Set<string>();
+  const activeAlerts = alerts.filter((alert) => alert.severity === 'critical' || alert.severity === 'warning');
+  const tips: Tip[] = [];
 
-    // Check CO levels
-    const co = sensors['Monoxido']?.value;
-    const coThreshold = thresholds['Monoxido'];
-    const hasCOAlert = activeAlerts.some((a) => {
-        const t = (a.title + a.description).toLowerCase();
-        return t.includes('monóxido') || t.includes('monoxido') || t.includes(' co ');
+  const monoxide = sensors.Monoxido?.value;
+  const monoxideThreshold = thresholds.Monoxido;
+  const hasMonoxideAlert = activeAlerts.some(
+    (alert) => alert.title.toLowerCase().includes('monóxido') || alert.title.toLowerCase().includes('co'),
+  );
+
+  if (hasMonoxideAlert && monoxide !== undefined && monoxideThreshold) {
+    const isCritical = Number(monoxide) > monoxideThreshold.critical[1];
+
+    tips.push({
+      id: 'co',
+      icon: <Wind size={20} strokeWidth={2.2} />,
+      title: isCritical ? 'Peligro por gases tóxicos' : 'Calidad del aire comprometida',
+      subtitle: `Concentración actual: ${Number(monoxide).toFixed(0)} ppm`,
+      color: isCritical ? 'var(--critical)' : 'var(--warning)',
+      priority: isCritical ? 1 : 2,
+      actions: isCritical
+        ? [
+            'Cierra puertas y ventanas mientras defines una salida segura.',
+            'Usa protección respiratoria si debes desplazarte por el sector.',
+            'Reporta el punto exacto de concentración elevada al equipo de respuesta.',
+          ]
+        : [
+            'Suspende actividad física al aire libre.',
+            'Mantén ventilación cruzada en espacios interiores.',
+            'Vuelve a verificar la siguiente lectura antes de retomar actividad normal.',
+          ],
     });
+  }
 
-    if (hasCOAlert && co !== undefined && coThreshold && !seen.has('co')) {
-        seen.add('co');
-        const isCritical = co > coThreshold.critical[1];
-        tips.push({
-            id: 'co',
-            icon: <Wind size={18} />,
-            title: isCritical ? 'Nivel crítico de CO' : 'CO elevado en el aire',
-            subtitle: `${co.toFixed(0)} ppm detectados`,
-            color: isCritical ? 'var(--red)' : 'var(--orange)',
-            dim: isCritical ? 'var(--red-dim)' : 'var(--orange-dim)',
-            priority: isCritical ? 1 : 2,
-            actions: isCritical
-                ? [
-                    'Evacúe el área inmediatamente',
-                    'No use vehículos cerca de la zona',
-                    'Llame a Bomberos (119) o Emergencias (123)',
-                    'Ayude a personas mayores y niños a salir',
-                ]
-                : [
-                    'Abra ventanas y puertas para ventilar',
-                    'Evite ejercicio al aire libre',
-                    'Personas con asma deben tomar precauciones',
-                    'Esté atento a mareos o dolor de cabeza',
-                ],
-        });
-    }
+  const methane = sensors.metano?.value;
+  const methaneThreshold = thresholds.metano;
+  const hasMethaneAlert = activeAlerts.some((alert) => alert.title.toLowerCase().includes('metano'));
 
-    // Check Metano levels
-    const metano = sensors['metano']?.value;
-    const metanoThreshold = thresholds['metano'];
-    const hasMetanoAlert = activeAlerts.some((a) => {
-        const t = (a.title + a.description).toLowerCase();
-        return t.includes('metano') || t.includes('methane');
+  if (hasMethaneAlert && methane !== undefined && methaneThreshold) {
+    const isCritical = Number(methane) > methaneThreshold.critical[1];
+
+    tips.push({
+      id: 'metano',
+      icon: <Flame size={20} strokeWidth={2.2} />,
+      title: isCritical ? 'Riesgo de fuga inflamable' : 'Acumulación de metano',
+      subtitle: `Nivel detectado: ${Number(methane).toFixed(0)} ppm`,
+      color: isCritical ? 'var(--critical)' : 'var(--warning)',
+      priority: isCritical ? 1 : 2,
+      actions: isCritical
+        ? [
+            'Evita cualquier chispa, llama o manipulación eléctrica cercana.',
+            'Despeja el área y activa la llamada a bomberos o servicio de gas.',
+            'No regreses hasta confirmar dispersión y lectura estable.',
+          ]
+        : [
+            'Ventila sótanos y zonas bajas donde el gas pueda concentrarse.',
+            'Confirma si el olor persiste en la siguiente medición.',
+            'Mantén una ruta de evacuación clara para la comunidad cercana.',
+          ],
     });
+  }
 
-    if (hasMetanoAlert && metano !== undefined && metanoThreshold && !seen.has('metano')) {
-        seen.add('metano');
-        const isCritical = metano > metanoThreshold.critical[1];
-        tips.push({
-            id: 'metano',
-            icon: <Flame size={18} />,
-            title: isCritical ? '¡Peligro! Gas Metano alto' : 'Metano elevado en la zona',
-            subtitle: `${metano.toFixed(0)} ppm detectados`,
-            color: isCritical ? 'var(--red)' : 'var(--orange)',
-            dim: isCritical ? 'var(--red-dim)' : 'var(--orange-dim)',
-            priority: isCritical ? 1 : 2,
-            actions: isCritical
-                ? [
-                    'No encienda fósforos ni interruptores eléctricos',
-                    'Evacúe la zona caminando, sin correr',
-                    'Llame a la empresa de gas (164)',
-                    'No regrese hasta que las autoridades lo indiquen',
-                ]
-                : [
-                    'Ventile abriendo puertas y ventanas',
-                    'Apague aparatos de combustión',
-                    'No encienda fuego ni fume',
-                    'Esté pendiente si el nivel sube',
-                ],
-        });
-    }
-
-    // Check Temperature
-    const temp = sensors['Temperatura']?.value;
-    const tempThreshold = thresholds['Temperatura'];
-    const hasTempAlert = activeAlerts.some((a) => {
-        const t = (a.title + a.description).toLowerCase();
-        return t.includes('temperatura');
-    });
-
-    if (hasTempAlert && temp !== undefined && tempThreshold && !seen.has('temp')) {
-        seen.add('temp');
-        tips.push({
-            id: 'temp',
-            icon: <Thermometer size={18} />,
-            title: temp > tempThreshold.warning[1] ? 'Calor excesivo' : 'Temperatura muy baja',
-            subtitle: `${temp.toFixed(1)}°C registrados`,
-            color: 'var(--yellow)',
-            dim: 'var(--yellow-dim)',
-            priority: 3,
-            actions:
-                temp > tempThreshold.warning[1]
-                    ? [
-                        'Manténgase hidratado',
-                        'Busque sombra y espacios frescos',
-                        'Proteja a niños y adultos mayores',
-                        'Evite actividad física intensa',
-                    ]
-                    : [
-                        'Abríguese bien al salir',
-                        'Proteja a personas vulnerables del frío',
-                        'Revise calefacción si la usa',
-                        'Evite hipotermia por exposición prolongada',
-                    ],
-        });
-    }
-
-    // Check for impact/seismic
-    const hasImpact = activeAlerts.some((a) => {
-        const t = (a.title + a.description).toLowerCase();
-        return t.includes('impacto') || t.includes('caída') || t.includes('aceleración');
-    });
-
-    if (hasImpact && !seen.has('impact')) {
-        seen.add('impact');
-        tips.push({
-            id: 'impact',
-            icon: <AlertTriangle size={18} />,
-            title: 'Movimiento brusco detectado',
-            subtitle: 'Posible impacto o sismo',
-            color: 'var(--red)',
-            dim: 'var(--red-dim)',
-            priority: 1,
-            actions: [
-                'Mantenga la calma',
-                'Aléjese de ventanas y objetos altos',
-                'Ubíquese en un lugar seguro',
-                'Siga el protocolo de evacuación si es necesario',
-            ],
-        });
-    }
-
-    // Sort by priority (most urgent first)
-    tips.sort((a, b) => a.priority - b.priority);
-    return tips;
+  return tips.sort((left, right) => left.priority - right.priority);
 }
 
 export default function SafetyTips({ alerts, sensors, thresholds }: SafetyTipsProps) {
-    const tips = useMemo(() => getActiveTips(alerts, sensors, thresholds), [alerts, sensors, thresholds]);
+  const tips = useMemo(() => getActiveTips(alerts, sensors, thresholds), [alerts, sensors, thresholds]);
 
-    // No alerts: show a compact "all clear" banner
-    if (tips.length === 0) {
-        return (
-            <div
-                className="card flex items-center gap-4 px-5 py-4"
-                style={{ borderLeft: '3px solid var(--green)' }}
-            >
-                <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'var(--green-dim)', color: 'var(--green)' }}
-                >
-                    <Shield size={18} />
-                </div>
-                <div className="flex-1">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-                        ✅ Ambiente seguro — Sin alertas activas
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-                        Los niveles de gases y condiciones ambientales están dentro de los rangos normales para la comunidad.
-                    </p>
-                </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0" style={{ color: 'var(--green)' }}>
-                    <Heart size={14} />
-                    <span className="text-xs font-medium">Aire limpio</span>
-                </div>
+  return (
+    <AnimatePresence mode="wait">
+      {tips.length === 0 ? (
+        <motion.div
+          key="safe"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="surface p-8 md:p-10"
+        >
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="flex max-w-2xl items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success">
+                <Shield size={20} />
+              </div>
+              <div className="space-y-3">
+                <p className="text-kicker text-success">Condición segura</p>
+                <h3 className="text-3xl tracking-[-0.05em]">No hay acciones urgentes en este momento.</h3>
+                <p className="text-base leading-7 text-muted-foreground">
+                  El sistema no detecta concentraciones peligrosas. Mantén el seguimiento rutinario y revisa de nuevo si cambia el estado general del tablero.
+                </p>
+              </div>
             </div>
-        );
-    }
 
-    // Active alerts: show tips prominently
-    return (
-        <div className="flex flex-col gap-3">
-            <div
-                className="grid gap-3"
-                style={{
-                    gridTemplateColumns: tips.length === 1 ? '1fr' : `repeat(${Math.min(tips.length, 3)}, 1fr)`,
-                }}
+            <div className="inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/5 px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.24em] text-success">
+              <Heart size={14} />
+              Operación estable
+            </div>
+          </div>
+        </motion.div>
+      ) : (
+        <div className="space-y-8">
+          {tips.map((tip) => (
+            <motion.article
+              key={tip.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="surface p-8 md:p-10"
             >
-                {tips.map((tip) => (
+              <div className="space-y-8">
+                <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                  <div className="flex items-start gap-4">
                     <div
-                        key={tip.id}
-                        className="card animate-fade-in-up"
-                        style={{
-                            padding: '20px',
-                            borderLeft: `3px solid ${tip.color}`,
-                            position: 'relative',
-                            overflow: 'hidden',
-                        }}
+                      className="flex h-12 w-12 items-center justify-center rounded-full border"
+                      style={{ borderColor: tip.color, color: tip.color }}
                     >
-                        {/* Background glow */}
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100px',
-                                height: '100px',
-                                background: `radial-gradient(circle, ${tip.color}06 0%, transparent 70%)`,
-                                pointerEvents: 'none',
-                            }}
-                        />
-
-                        {/* Header row */}
-                        <div className="flex items-center gap-3 mb-2.5" style={{ position: 'relative' }}>
-                            <div
-                                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{ background: tip.dim, color: tip.color }}
-                            >
-                                {tip.icon}
-                            </div>
-                            <div className="min-w-0">
-                                <h3 className="text-sm font-bold" style={{ color: 'var(--text)' }}>
-                                    {tip.title}
-                                </h3>
-                                <span className="text-[11px] mono font-medium" style={{ color: tip.color }}>
-                                    {tip.subtitle}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-col gap-1.5" style={{ position: 'relative' }}>
-                            <span
-                                className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
-                                style={{ color: tip.color }}
-                            >
-                                ¿Qué debe hacer?
-                            </span>
-                            {tip.actions.map((action, i) => (
-                                <div key={i} className="flex items-start gap-2">
-                                    <span
-                                        className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 text-[9px] font-bold mt-0.5"
-                                        style={{ background: tip.dim, color: tip.color }}
-                                    >
-                                        {i + 1}
-                                    </span>
-                                    <span className="text-xs leading-snug" style={{ color: 'var(--text-2)' }}>
-                                        {action}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
+                      {tip.icon}
                     </div>
-                ))}
-            </div>
+                    <div className="space-y-3">
+                      <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em]" style={{ color: tip.color }}>
+                        Protocolo prioritario
+                      </p>
+                      <h3 className="text-3xl tracking-[-0.05em]">{tip.title}</h3>
+                      <p className="text-base leading-7 text-muted-foreground">{tip.subtitle}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {tip.actions.map((action) => (
+                    <div key={action} className="border-t border-border/80 pt-4">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-muted text-primary">
+                          <Check size={14} strokeWidth={2.5} />
+                        </div>
+                        <p className="text-sm leading-6 text-foreground/85">{action}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.article>
+          ))}
         </div>
-    );
+      )}
+    </AnimatePresence>
+  );
 }
